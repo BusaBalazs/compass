@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ---------- Boot / glitch sequence ---------- */
+@keyframes glitchFlicker {
+  0%   { opacity: 1;   transform: translateX(0); }
+  8%   { opacity: 0.2; transform: translateX(-2px); }
+  16%  { opacity: 1;   transform: translateX(2px); }
+  24%  { opacity: 0.3; transform: translateX(-1px); }
+  32%  { opacity: 1;   transform: translateX(0); }
+  60%  { opacity: 0.85;}
+  100% { opacity: 1;   transform: translateX(0); }
+}
+.glitch-flicker { animation: glitchFlicker 0.9s steps(2, jump-end) forwards; }
+
+@keyframes bootScan {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: translateY(220%); opacity: 0; }
+}
+.boot-scan { animation: bootScan 0.9s ease-in-out forwards; }
+
+/* ---------- Ring lock pulse ---------- */
+@keyframes ringLockPulse {
+  0%   { filter: drop-shadow(0 0 2px currentColor); }
+  50%  { filter: drop-shadow(0 0 14px currentColor) drop-shadow(0 0 26px currentColor); }
+  100% { filter: drop-shadow(0 0 4px currentColor); }
+}
+.ring-lock-pulse { animation: ringLockPulse 0.7s ease-out; }
+
+/* ---------- Win pulse on whole rig ---------- */
+@keyframes rigWinPulse {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.045); }
+  60%  { transform: scale(0.99); }
+  100% { transform: scale(1.015); }
+}
+.rig-win-pulse { animation: rigWinPulse 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+@keyframes softPulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+.soft-pulse { animation: softPulse 2.2s ease-in-out infinite; }
+
+/* ---------- Scanline overlay (win state) ---------- */
+@keyframes scanlineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 8px; }
+}
+.scanline-overlay {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 255, 140, 0.08) 0px,
+    rgba(0, 255, 140, 0.08) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  animation: scanlineMove 0.4s linear infinite;
+}
+
+/* ---------- Faint always-on scanlines for tactical mood ---------- */
+.scanline-faint {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(120, 200, 255, 0.035) 0px,
+    rgba(120, 200, 255, 0.035) 1px,
+    transparent 2px,
+    transparent 3px
+  );
+}
+
+/* ---------- Modal ---------- */
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-in { animation: modalIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+@keyframes revealIn {
+  from { opacity: 0; transform: scale(0.72); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.reveal-in { animation: revealIn 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes hudBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.hud-blink { animation: hudBlink 1.4s ease-in-out infinite; }
