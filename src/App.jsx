@@ -12,14 +12,14 @@ const NEEDLE_THRESHOLD = 2;
 // atan2(dy,dx) convention used everywhere below: 0deg = East (right),
 // 90deg = South (down), 180deg = West (left), 270deg = North (up).
 const COMPASS_POINTS = [
-  { label: "N", base: 270 },
-  { label: "NE", base: 315 },
-  { label: "E", base: 0 },
-  { label: "SE", base: 45 },
-  { label: "S", base: 90 },
-  { label: "SW", base: 135 },
-  { label: "W", base: 180 },
-  { label: "NW", base: 225 },
+  { label: "É", base: 270 },
+  { label: "ÉK", base: 315 },
+  { label: "K", base: 0 },
+  { label: "DK", base: 45 },
+  { label: "D", base: 90 },
+  { label: "DNY", base: 135 },
+  { label: "NY", base: 180 },
+  { label: "ÉNY", base: 225 },
 ];
 
 function normalizeAngle(a) {
@@ -165,8 +165,8 @@ export default function App() {
 
   return (
     <div
-      className="relative w-screen h-screen overflow-hidden select-none font-mono"
-      style={{ touchAction: "none" }}
+      className="relative min-h-[100dvh] w-full overflow-x-hidden overflow-y-auto pb-20 select-none font-mono"
+      style={{ touchAction: "pan-y", overscrollBehavior: "auto" }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
@@ -181,7 +181,7 @@ export default function App() {
         }}
       />
       {/* Cinematic dark overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/85 via-zinc-950/88 to-black/95" />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/45 via-zinc-950/88 to-black/95" />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -215,22 +215,47 @@ export default function App() {
         <h1
           className="text-base sm:text-2xl tracking-[0.16em] font-semibold text-[#e8dcb8]"
           style={{
-          
             textShadow: `0 0 16px ${accentDim}, 0 0 30px ${accentDim}`,
           }}
         >
           DIGITAL VECTOR DECRYPTER
         </h1>
-        <p
-          className="mt-1.5 text-[12px] sm:text-xs tracking-[0.14em] font-medium text-white"
-         
-        >
+        <p className="mt-1.5 text-[12px] sm:text-xs tracking-[0.14em] font-medium text-white">
           {statusText}
         </p>
       </div>
 
+      {/* Bottom HUD panel — the clue / mission text */}
+      <div className=" sm:bottom-8 inset-x-0 px-5 flex justify-center mt-36">
+        <div
+          className="max-w-md w-full rounded-xl border backdrop-blur-md"
+          style={{
+            border: "1px solid rgba(212,175,55,0.35)",
+
+            background: "rgba(10,13,20,0.65)",
+            letterSpacing: "0.12em",
+            fontSize: "0.1rem",
+            backdropFilter: "blur(4px)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+          }}
+        >
+          <p
+            className="text-[1rem] sm:text-xs leading-relaxed tracking-wide p-5"
+            style={{ color: "white" }}
+          >
+            <span className="font-bold text-[#e8dcb8]">[SYSTEM OVERRIDE]</span>{" "}
+            Tekerd a fővektort Észak-Nyugati irányba (ÉNY). Ezután zárd le a
+            frekvenciát, forgasd a mutatót a délután 4 órás időkódnak megfelelő
+            fokra. Figyeld a fok kiosztást!
+          </p>
+        </div>
+      </div>
+
       {/* ---------------- Compass rig ---------------- */}
-      <div className="absolute inset-0 flex items-center justify-center z-10 px-4">
+      <div
+        className="mt-6 flex w-full items-center justify-center px-4 pb-6"
+        style={{ touchAction: "none" }}
+      >
         <div
           className={`relative w-[84vw] max-w-[380px] aspect-square ${won ? "rig-win-pulse" : ""}`}
         >
@@ -548,41 +573,13 @@ export default function App() {
               cy="200"
               r="196"
               fill="transparent"
-              onPointerDown={handleStartDrag}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                handleStartDrag(e);
+              }}
               style={{ cursor: won ? "default" : "grab" }}
             />
           </svg>
-        </div>
-      </div>
-
-      {/* Bottom HUD panel — the clue / mission text */}
-      <div className="absolute top-[125px] sm:bottom-8 inset-x-0 z-30 px-5 flex justify-center">
-        <div
-          className="max-w-md w-full rounded-xl border px-4 py-3 backdrop-blur-md"
-          style={{
-            padding: "11px 30px",
-            border: "1px solid rgba(212,175,55,0.35)",
-            borderRadius: 999,
-            background: "rgba(10,13,20,0.65)",
-            letterSpacing: "0.12em",
-            fontSize: "0.1rem",
-            backdropFilter: "blur(4px)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-          }}
-        >
-          <p
-            className="text-[.8rem] sm:text-xs leading-relaxed tracking-wide"
-            style={{ color: "white" }}
-          >
-            <span
-              className="font-bold text-[#e8dcb8]"
-              
-            >
-              [SYSTEM OVERRIDE]
-            </span>{" "}
-            Állítsd a fővektort Észak-Nyugatra (NW), majd zárd le a frekvenciát
-            a délután 4 órás időkódnak megfelelő fokon!
-          </p>
         </div>
       </div>
 
@@ -655,6 +652,12 @@ export default function App() {
             >
               SYSTEM REBOOT (RESTART)
             </button>
+
+            <div className="relative z-20 mt-6 flex justify-center px-5">
+              <button className="w-full max-w-xs rounded-lg border border-cyan-400/40 bg-slate-900/80 px-4 py-3 text-sm font-semibold tracking-[0.25em] text-cyan-200 shadow-[0_0_18px_rgba(34,229,255,0.16)]">
+                <a href="https://leprimore-demo.netlify.app/">Vissza</a>
+              </button>
+            </div>
           </div>
         </div>
       )}
