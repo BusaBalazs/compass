@@ -161,7 +161,7 @@ export default function App() {
       ? needleActive
         ? "ÁLLÍTSD BE A JELVEKTOR SZÖGÉT"
         : "KALIBRÁCIÓ FOLYAMATBAN..."
-      : "FORGASD A VEKTORGYŰRŰT: Észak-Nyugati (NW) Irányba!";
+      : "FORGASD A VEKTORGYŰRŰT: Észak-Nyugati (ÉNY) Irányba!";
 
   return (
     <div
@@ -210,28 +210,12 @@ export default function App() {
         </span>
       </div>
 
-      {/* Title + live status */}
-      <div className="absolute top-11 sm:top-14 inset-x-0 z-30 text-center px-6">
-        <h1
-          className="text-base sm:text-2xl tracking-[0.16em] font-semibold text-[#e8dcb8]"
-          style={{
-            textShadow: `0 0 16px ${accentDim}, 0 0 30px ${accentDim}`,
-          }}
-        >
-          DIGITAL VECTOR DECRYPTER
-        </h1>
-        <p className="mt-1.5 text-[12px] sm:text-xs tracking-[0.14em] font-medium text-white">
-          {statusText}
-        </p>
-      </div>
-
       {/* Bottom HUD panel — the clue / mission text */}
-      <div className=" sm:bottom-8 inset-x-0 px-5 flex justify-center mt-36">
+      <div className=" sm:bottom-8 inset-x-0 px-5 mt-12">
         <div
           className="max-w-md w-full rounded-xl border backdrop-blur-md"
           style={{
             border: "1px solid rgba(212,175,55,0.35)",
-
             background: "rgba(10,13,20,0.65)",
             letterSpacing: "0.12em",
             fontSize: "0.1rem",
@@ -249,6 +233,13 @@ export default function App() {
             fokra. Figyeld a fok kiosztást!
           </p>
         </div>
+      </div>
+
+      {/* Title + live status */}
+      <div className="relative  inset-x-0 z-30 text-center px-6">
+        <p className="mt-6 text-[12px] sm:text-xs tracking-[0.14em] font-medium text-white">
+          {statusText}
+        </p>
       </div>
 
       {/* ---------------- Compass rig ---------------- */}
