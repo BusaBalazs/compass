@@ -12,15 +12,61 @@ const NEEDLE_THRESHOLD = 2;
 // atan2(dy,dx) convention used everywhere below: 0deg = East (right),
 // 90deg = South (down), 180deg = West (left), 270deg = North (up).
 const COMPASS_POINTS = [
-  { label: "É", base: 270 },
-  { label: "ÉK", base: 315 },
-  { label: "K", base: 0 },
-  { label: "DK", base: 45 },
-  { label: "D", base: 90 },
-  { label: "DNY", base: 135 },
-  { label: "NY", base: 180 },
-  { label: "ÉNY", base: 225 },
+  { hu: "É", en: "N", base: 270 },
+  { hu: "ÉK", en: "NE", base: 315 },
+  { hu: "K", en: "E", base: 0 },
+  { hu: "DK", en: "SE", base: 45 },
+  { hu: "D", en: "S", base: 90 },
+  { hu: "DNY", en: "SW", base: 135 },
+  { hu: "NY", en: "W", base: 180 },
+  { hu: "ÉNY", en: "NW", base: 225 },
 ];
+
+/* ------------------------------------------------------------------ */
+/*  Bilingual copy                                                     */
+/* ------------------------------------------------------------------ */
+const COPY = {
+  hu: {
+    hudLabel: "TAKTIKAI KAPCSOLAT",
+    overrideTag: "[RENDSZER FELÜLBÍRÁLÁS]",
+    clue:
+      "Tekerd a fővektort Észak-Nyugati irányba (ÉNY). Ezután zárd le a frekvenciát, forgasd a mutatót a délután 4 órás időkódnak megfelelő fokra. Figyeld a fok kiosztást!",
+    statusWon: "FREKVENCIA ZÁROLVA",
+    statusNeedle: "ÁLLÍTSD BE A JELVEKTOR SZÖGÉT",
+    statusCalibrating: "KALIBRÁCIÓ FOLYAMATBAN...",
+    statusRing: "FORGASD A VEKTORGYŰRŰT: Észak-Nyugati (ÉNY) Irányba!",
+    modalTitle: (
+      <>
+        JEL ZÁROLVA.
+        <br />
+        CÉLPONT BEMÉRVE.
+      </>
+    ),
+    modalSubtitle: "VEKTOR: ÉNY // FREKV: 120° // STÁTUSZ: MEGERŐSÍTVE",
+    reset: "RENDSZER ÚJRAINDÍTÁS",
+    back: "Vissza",
+  },
+  en: {
+    hudLabel: "TACTICAL UPLINK",
+    overrideTag: "[SYSTEM OVERRIDE]",
+    clue:
+      "Turn the main vector to North-West (NW). Then lock the frequency — rotate the needle to the degree matching the 4 PM time code. Watch the degree markings!",
+    statusWon: "FREQUENCY LOCKED",
+    statusNeedle: "SET THE SIGNAL VECTOR ANGLE",
+    statusCalibrating: "CALIBRATION IN PROGRESS...",
+    statusRing: "ROTATE THE VECTOR RING: North-West (NW) Direction!",
+    modalTitle: (
+      <>
+        SIGNAL LOCKED.
+        <br />
+        TARGET LOCALIZED.
+      </>
+    ),
+    modalSubtitle: "VECTOR: NW // FREQ: 120° // STATUS: CONFIRMED",
+    reset: "SYSTEM REBOOT",
+    back: "Back",
+  },
+};
 
 function normalizeAngle(a) {
   return ((a % 360) + 360) % 360;
@@ -53,122 +99,132 @@ const pointOnCircle = (angleDeg, radius) => ({
 export default function App() {
   const [ringRotation, setRingRotation] = useState(() =>
     randomScrambledAngle(RING_TARGET),
-  );
-  const [ringLocked, setRingLocked] = useState(false);
-  const [booting, setBooting] = useState(false);
-  const [revealed, setRevealed] = useState(false);
-  const [needleActive, setNeedleActive] = useState(false);
-  const [needleAngle, setNeedleAngle] = useState(() =>
-    randomScrambledAngle(NEEDLE_TARGET),
-  );
-  const [won, setWon] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+);
+const [ringLocked, setRingLocked] = useState(false);
+const [booting, setBooting] = useState(false);
+const [revealed, setRevealed] = useState(false);
+const [needleActive, setNeedleActive] = useState(false);
+const [needleAngle, setNeedleAngle] = useState(() =>
+  randomScrambledAngle(NEEDLE_TARGET),
+);
+const [won, setWon] = useState(false);
+const [showModal, setShowModal] = useState(false);
+const [lang, setLang] = useState("hu");
+const t = COPY[lang];
 
-  const svgRef = useRef(null);
-  const draggingRef = useRef(null); // 'ring' | 'needle' | null
+const svgRef = useRef(null);
+const draggingRef = useRef(null); // 'ring' | 'needle' | null
 
-  const getAngleFromEvent = useCallback((e) => {
-    const svg = svgRef.current;
-    if (!svg) return 0;
-    const rect = svg.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = e.clientX - cx;
-    const dy = e.clientY - cy;
-    return normalizeAngle((Math.atan2(dy, dx) * 180) / Math.PI);
-  }, []);
+/* ------------------------------------------------------------------ */
+const getAngleFromEvent = useCallback((e) => {
+  const svg = svgRef.current;
+  if (!svg) return 0;
+  const rect = svg.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = e.clientX - cx;
+  const dy = e.clientY - cy;
+  return normalizeAngle((Math.atan2(dy, dx) * 180) / Math.PI);
+}, []);
 
-  const handleStartDrag = (e) => {
-    if (won) return;
-    let mode = null;
-    if (!ringLocked) mode = "ring";
-    else if (needleActive) mode = "needle";
-    if (!mode) return;
-    draggingRef.current = mode;
-    e.target.setPointerCapture?.(e.pointerId);
-    e.preventDefault();
-  };
+/* ------------------------------------------------------------------ */
+const handleStartDrag = (e) => {
+  if (won) return;
+  let mode = null;
+  if (!ringLocked) mode = "ring";
+  else if (needleActive) mode = "needle";
+  if (!mode) return;
+  draggingRef.current = mode;
+  e.target.setPointerCapture?.(e.pointerId);
+  e.preventDefault();
+};
 
-  const handlePointerMove = (e) => {
-    const mode = draggingRef.current;
-    if (!mode) return;
-    const angle = getAngleFromEvent(e);
-
-    if (mode === "ring" && !ringLocked) {
-      setRingRotation(angle);
-      if (angleDiff(angle, RING_TARGET) <= RING_THRESHOLD) {
-        draggingRef.current = null;
-        setRingRotation(RING_TARGET);
-        setRingLocked(true);
-        setBooting(true);
-      }
-    } else if (mode === "needle" && needleActive && !won) {
-      setNeedleAngle(angle);
-      if (angleDiff(angle, NEEDLE_TARGET) <= NEEDLE_THRESHOLD) {
-        draggingRef.current = null;
-        setNeedleAngle(NEEDLE_TARGET);
-        setWon(true);
-      }
+/* ------------------------------------------------------------------ */
+const handlePointerMove = (e) => {
+  const mode = draggingRef.current;
+  if (!mode) return;
+  const angle = getAngleFromEvent(e);
+  
+  if (mode === "ring" && !ringLocked) {
+    setRingRotation(angle);
+    if (angleDiff(angle, RING_TARGET) <= RING_THRESHOLD) {
+      draggingRef.current = null;
+      setRingRotation(RING_TARGET);
+      setRingLocked(true);
+      setBooting(true);
     }
-  };
+  } else if (mode === "needle" && needleActive && !won) {
+    setNeedleAngle(angle);
+    if (angleDiff(angle, NEEDLE_TARGET) <= NEEDLE_THRESHOLD) {
+      draggingRef.current = null;
+      setNeedleAngle(NEEDLE_TARGET);
+      setWon(true);
+    }
+  }
+};
 
-  const handlePointerUp = () => {
-    draggingRef.current = null;
-  };
+/* ------------------------------------------------------------------ */
+const handlePointerUp = () => {
+  draggingRef.current = null;
+};
 
-  // Boot-up sequence: reveal the degree markings, then arm the needle.
-  useEffect(() => {
-    if (!booting) return;
-    const t1 = setTimeout(() => setRevealed(true), 260);
-    const t2 = setTimeout(() => {
-      setBooting(false);
-      setNeedleActive(true);
-    }, 1100);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [booting]);
-
-  // A short beat of "target localized" animation before the modal appears.
-  useEffect(() => {
-    if (!won) return;
-    const t = setTimeout(() => setShowModal(true), 1300);
-    return () => clearTimeout(t);
-  }, [won]);
-
-  const handleReset = () => {
-    setShowModal(false);
-    setWon(false);
-    setNeedleActive(false);
-    setRevealed(false);
+/* ------------------------------------------------------------------ */
+// Boot-up sequence: reveal the degree markings, then arm the needle.
+useEffect(() => {
+  if (!booting) return;
+  const t1 = setTimeout(() => setRevealed(true), 260);
+  const t2 = setTimeout(() => {
     setBooting(false);
-    setRingLocked(false);
-    setRingRotation(randomScrambledAngle(RING_TARGET));
-    setNeedleAngle(randomScrambledAngle(NEEDLE_TARGET));
+    setNeedleActive(true);
+  }, 1100);
+  return () => {
+    clearTimeout(t1);
+    clearTimeout(t2);
   };
+}, [booting]);
 
-  const NEEDLE_LEN = 106;
-  const tip = pointOnCircle(needleAngle, NEEDLE_LEN);
-  const tailBack = pointOnCircle(needleAngle + 180, NEEDLE_LEN * 0.22);
+/* ------------------------------------------------------------------ */
+// A short beat of "target localized" animation before the modal appears.
+useEffect(() => {
+  if (!won) return;
+  const t = setTimeout(() => setShowModal(true), 1300);
+  return () => clearTimeout(t);
+}, [won]);
 
-  const accent = won ? "#39ff8f" : "#22e5ff";
-  const accentDim = won ? "rgba(57,255,143,0.35)" : "rgba(34,229,255,0.35)";
+/* ------------------------------------------------------------------ */
+const handleReset = () => {
+  setShowModal(false);
+  setWon(false);
+  setNeedleActive(false);
+  setRevealed(false);
+  setBooting(false);
+  setRingLocked(false);
+  setRingRotation(randomScrambledAngle(RING_TARGET));
+  setNeedleAngle(randomScrambledAngle(NEEDLE_TARGET));
+};
 
-  const statusText = won
-    ? "FREKVENCIA ZÁROLVA"
-    : ringLocked
-      ? needleActive
-        ? "ÁLLÍTSD BE A JELVEKTOR SZÖGÉT"
-        : "KALIBRÁCIÓ FOLYAMATBAN..."
-      : "FORGASD A VEKTORGYŰRŰT: Észak-Nyugati (ÉNY) Irányba!";
+const NEEDLE_LEN = 106;
+const tip = pointOnCircle(needleAngle, NEEDLE_LEN);
+const tailBack = pointOnCircle(needleAngle + 180, NEEDLE_LEN * 0.22);
 
-  return (
-    <div
-      className="relative min-h-[100dvh] w-full overflow-x-hidden overflow-y-auto pb-20 select-none font-mono"
-      style={{ touchAction: "pan-y", overscrollBehavior: "auto" }}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
+const accent = won ? "#f7d976" : "#d9c17e";
+const accentDim = won ? "rgba(247,217,118,0.35)" : "rgba(217,193,126,0.35)";
+
+const statusText = won
+? t.statusWon
+: ringLocked
+? needleActive
+? t.statusNeedle
+: t.statusCalibrating
+: t.statusRing;
+
+/* ------------------------------------------------------------------ */
+return (
+  <div
+  className="relative min-h-[100dvh] w-full overflow-x-hidden overflow-y-auto pb-20 select-none font-serif"
+  style={{ touchAction: "pan-y", overscrollBehavior: "auto" }}
+  onPointerMove={handlePointerMove}
+  onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -176,17 +232,17 @@ export default function App() {
       <div
         className="absolute inset-0 bg-cover bg-no-repeat"
         style={{
-          backgroundImage: "url('/bg.png')",
+          backgroundImage: "url('/bg_blur_comp.png')",
           backgroundPosition: "center 32%",
         }}
       />
       {/* Cinematic dark overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/45 via-zinc-950/88 to-black/95" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#1b232b]/25 via-[#11161c]/55 to-black/78" />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at 50% 45%, transparent 38%, rgba(0,0,0,0.7) 100%)",
+            "radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(5,8,10,0.55) 100%)",
         }}
       />
       <div className="absolute inset-0 pointer-events-none scanline-faint" />
@@ -198,16 +254,24 @@ export default function App() {
       <div className="absolute top-0 inset-x-0 z-30 px-4 pt-3 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span
-            className="w-1.5 h-1.5 rounded-full hud-blink bg-[#22e5ff]"
+            className="w-1.5 h-1.5 rounded-full hud-blink bg-[#d9c17e]"
             style={{ boxShadow: `0 0 8px 2px white` }}
           />
-          <span className="text-[10px] sm:text-xs tracking-[0.25em] text-[#ffae00]">
-            TACTICAL&nbsp;UPLINK
+          <span className="font-display text-[10px] sm:text-xs tracking-[0.25em] text-[#e2cf8f]">
+            {t.hudLabel}
           </span>
         </div>
-        <span className="text-[9px] sm:text-[10px] tracking-widest text-slate-500">
-          SYS//v2.7.1
-        </span>
+        <button
+          onClick={() => setLang((l) => (l === "hu" ? "en" : "hu"))}
+          className="font-display text-[10px] sm:text-[11px] tracking-[0.2em] px-3 py-1 rounded-full border"
+          style={{
+            borderColor: "rgba(217,193,126,0.5)",
+            background: "rgba(16,20,26,0.45)",
+            color: "#f0dfa8",
+          }}
+        >
+          {lang.toUpperCase()}
+        </button>
       </div>
 
       {/* Bottom HUD panel — the clue / mission text */}
@@ -216,28 +280,28 @@ export default function App() {
           className="max-w-md w-full rounded-xl border backdrop-blur-md"
           style={{
             border: "1px solid rgba(212,175,55,0.35)",
-            background: "rgba(10,13,20,0.65)",
-            letterSpacing: "0.12em",
+            background: "rgba(14,18,23,0.48)",
+            letterSpacing: "0.03em",
             fontSize: "0.1rem",
             backdropFilter: "blur(4px)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
           }}
         >
           <p
-            className="text-[1rem] sm:text-xs leading-relaxed tracking-wide p-5"
-            style={{ color: "white" }}
+            className="font-serif italic text-[1.05rem] sm:text-sm leading-relaxed tracking-wide p-5"
+            style={{ color: "#eceae0" }}
           >
-            <span className="font-bold text-[#e8dcb8]">[SYSTEM OVERRIDE]</span>{" "}
-            Tekerd a fővektort Észak-Nyugati irányba (ÉNY). Ezután zárd le a
-            frekvenciát, forgasd a mutatót a délután 4 órás időkódnak megfelelő
-            fokra. Figyeld a fok kiosztást!
+            <span className="font-display not-italic font-semibold text-[0.85em] tracking-[0.1em] text-[#f0dfa0]">
+              {t.overrideTag}
+            </span>{" "}
+            {t.clue}
           </p>
         </div>
       </div>
 
       {/* Title + live status */}
       <div className="relative  inset-x-0 z-30 text-center px-6">
-        <p className="mt-6 text-[12px] sm:text-xs tracking-[0.14em] font-medium text-white">
+        <p className="font-display mt-6 text-[12px] sm:text-xs tracking-[0.14em] font-medium text-[#eceae0]">
           {statusText}
         </p>
       </div>
@@ -266,7 +330,7 @@ export default function App() {
                 <path
                   d="M14 0 L0 0 0 14"
                   fill="none"
-                  stroke="rgba(120,190,255,0.10)"
+                  stroke="rgba(150,175,190,0.10)"
                   strokeWidth="0.6"
                 />
               </pattern>
@@ -274,20 +338,20 @@ export default function App() {
                 <stop
                   offset="0%"
                   stopColor={
-                    won ? "rgba(57,255,143,0.12)" : "rgba(34,229,255,0.10)"
+                    won ? "rgba(244,209,107,0.14)" : "rgba(203,178,106,0.10)"
                   }
                 />
                 <stop offset="100%" stopColor="rgba(0,0,0,0)" />
               </radialGradient>
             </defs>
 
-            {/* a) Outer matte-black bezel, static */}
+            {/* a) Outer matte bezel, static */}
             <circle
               cx="200"
               cy="200"
               r="196"
-              fill="#0a0d12"
-              stroke="#1a2530"
+              fill="#141a20"
+              stroke="#2c3a44"
               strokeWidth="3"
             />
             <circle
@@ -310,7 +374,7 @@ export default function App() {
                   y1={p1.y}
                   x2={p2.x}
                   y2={p2.y}
-                  stroke={isMajor ? accentDim : "rgba(120,190,255,0.18)"}
+                  stroke={isMajor ? accentDim : "rgba(150,175,190,0.16)"}
                   strokeWidth={isMajor ? 1.4 : 0.7}
                 />
               );
@@ -333,7 +397,7 @@ export default function App() {
                 cy="200"
                 r="168"
                 fill="none"
-                stroke={ringLocked ? accent : "#2b3d47"}
+                stroke={ringLocked ? accent : "#33424c"}
                 strokeWidth="2"
               />
               <circle
@@ -341,7 +405,7 @@ export default function App() {
                 cy="200"
                 r="176"
                 fill="none"
-                stroke={ringLocked ? accent : "#2b3d47"}
+                stroke={ringLocked ? accent : "#33424c"}
                 strokeWidth="1"
                 opacity="0.6"
               />
@@ -349,16 +413,17 @@ export default function App() {
                 const tickOuter = pointOnCircle(p.base, 176);
                 const tickInner = pointOnCircle(p.base, 160);
                 const labelPos = pointOnCircle(p.base, 145);
-                const isNW = p.label === "NW";
+                const isNW = p.base === 225;
+                const label = lang === "hu" ? p.hu : p.en;
                 return (
-                  <g key={p.label}>
+                  <g key={label}>
                     <line
                       x1={tickOuter.x}
                       y1={tickOuter.y}
                       x2={tickInner.x}
                       y2={tickInner.y}
                       stroke={
-                        ringLocked ? accent : isNW ? "#7fd6ff" : "#4a6270"
+                        ringLocked ? accent : isNW ? "#e8c874" : "#5a6b78"
                       }
                       strokeWidth="2"
                     />
@@ -369,11 +434,11 @@ export default function App() {
                       dominantBaseline="middle"
                       fontSize="15"
                       fontWeight="700"
-                      fontFamily="'JetBrains Mono', monospace"
-                      fill={ringLocked ? accent : isNW ? "#bdeeff" : "#8aa0ac"}
+                      fontFamily="'Cinzel', serif"
+                      fill={ringLocked ? accent : isNW ? "#f3dfa0" : "#93a3ad"}
                       style={{ letterSpacing: "0.5px" }}
                     >
-                      {p.label}
+                      {label}
                     </text>
                   </g>
                 );
@@ -391,7 +456,7 @@ export default function App() {
                     y1={p1.y}
                     x2={p2.x}
                     y2={p2.y}
-                    stroke="#33474f"
+                    stroke="#33424c"
                     strokeWidth="0.8"
                   />
                 );
@@ -405,7 +470,7 @@ export default function App() {
                 cy="200"
                 r="168"
                 fill="none"
-                stroke="#22e5ff"
+                stroke="#d9c17e"
                 strokeWidth="10"
                 opacity="0.06"
                 className="soft-pulse"
@@ -417,8 +482,8 @@ export default function App() {
               cx="200"
               cy="200"
               r="132"
-              fill="#070a0e"
-              stroke="#182229"
+              fill="#11161c"
+              stroke="#28323b"
               strokeWidth="1.5"
             />
             <circle cx="200" cy="200" r="132" fill="url(#gridPattern)" />
@@ -551,7 +616,7 @@ export default function App() {
                 cx="200"
                 cy="200"
                 r="10"
-                fill="#0d1319"
+                fill="#12171d"
                 stroke={accent}
                 strokeWidth="2"
               />
@@ -583,11 +648,11 @@ export default function App() {
           <div
             className="modal-in w-full max-w-sm rounded-2xl border px-7 py-8 text-center"
             style={{
-              borderColor: "rgba(57,255,143,0.5)",
+              borderColor: "rgba(244,209,107,0.5)",
               background:
-                "linear-gradient(160deg, #0b1a12 0%, #071009 60%, #050c07 100%)",
+                "linear-gradient(160deg, #141a20 0%, #0d1216 60%, #090c0f 100%)",
               boxShadow:
-                "0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(57,255,143,0.18)",
+                "0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(244,209,107,0.18)",
             }}
           >
             <svg
@@ -601,52 +666,49 @@ export default function App() {
                 cx="12"
                 cy="12"
                 r="10"
-                stroke="#39ff8f"
+                stroke="#f4d16b"
                 strokeWidth="1.3"
                 opacity="0.85"
               />
               <path
                 d="M8 12.5l2.5 2.5L16 9"
-                stroke="#39ff8f"
+                stroke="#f4d16b"
                 strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
             <h2
-              className="text-lg sm:text-xl font-bold tracking-wide mb-2"
+              className="font-display text-lg sm:text-xl font-bold tracking-wide mb-2"
               style={{
-                color: "#c7ffe0",
-                textShadow: "0 0 18px rgba(57,255,143,0.5)",
+                color: "#f7ecc9",
+                textShadow: "0 0 18px rgba(244,209,107,0.5)",
               }}
             >
-              SIGNAL LOCKED.
-              <br />
-              TARGET LOCALIZED.
+              {t.modalTitle}
             </h2>
             <p
               className="text-[11px] sm:text-xs tracking-widest mb-7"
-              style={{ color: "#6fe8a8" }}
+              style={{ color: "#e8d9a8" }}
             >
-              VECTOR: NW &nbsp;//&nbsp; FREQ: 120° &nbsp;//&nbsp; STATUS:
-              CONFIRMED
+              {t.modalSubtitle}
             </p>
             <button
               onClick={handleReset}
-              className="w-full py-3 rounded-lg font-bold tracking-widest text-sm"
+              className="font-display w-full py-3 rounded-lg font-bold tracking-widest text-sm"
               style={{
                 background:
-                  "linear-gradient(160deg, #6dffb0 0%, #22c97a 55%, #159457 100%)",
-                color: "#04170c",
-                boxShadow: "0 8px 22px rgba(57,255,143,0.35)",
+                  "linear-gradient(160deg, #f5dfa0 0%, #cf9d3e 55%, #9c7222 100%)",
+                color: "#241a08",
+                boxShadow: "0 8px 22px rgba(203,151,50,0.35)",
               }}
             >
-              SYSTEM REBOOT (RESTART)
+              {t.reset}
             </button>
 
             <div className="relative z-20 mt-6 flex justify-center px-5">
-              <button className="w-full max-w-xs rounded-lg border border-cyan-400/40 bg-slate-900/80 px-4 py-3 text-sm font-semibold tracking-[0.25em] text-cyan-200 shadow-[0_0_18px_rgba(34,229,255,0.16)]">
-                <a href="https://leprimore-demo.netlify.app/">Vissza</a>
+              <button className="font-display w-full max-w-xs rounded-lg border border-amber-400/40 bg-black/70 px-4 py-3 text-sm font-semibold tracking-[0.25em] text-amber-200 shadow-[0_0_18px_rgba(203,178,106,0.16)]">
+                <a href="https://leprimore-demo.netlify.app/">{t.back}</a>
               </button>
             </div>
           </div>
