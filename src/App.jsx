@@ -27,7 +27,7 @@ const COMPASS_POINTS = [
 /* ------------------------------------------------------------------ */
 const COPY = {
   hu: {
-    hudLabel: "TAKTIKAI KAPCSOLAT",
+    hudLabel: "KAPCSOLAT",
     overrideTag: "[RENDSZER FELÜLBÍRÁLÁS]",
     clue:
       "Tekerd a fővektort Észak-Nyugati irányba (ÉNY). Ezután zárd le a frekvenciát, forgasd a mutatót a délután 4 órás időkódnak megfelelő fokra. Figyeld a fok kiosztást!",
@@ -47,7 +47,7 @@ const COPY = {
     back: "Vissza",
   },
   en: {
-    hudLabel: "TACTICAL UPLINK",
+    hudLabel: "UPLINK",
     overrideTag: "[SYSTEM OVERRIDE]",
     clue:
       "Turn the main vector to North-West (NW). Then lock the frequency — rotate the needle to the degree matching the 4 PM time code. Watch the degree markings!",
@@ -232,7 +232,7 @@ return (
       <div
         className="absolute inset-0 bg-cover bg-no-repeat"
         style={{
-          backgroundImage: "url('/bg_blur_comp.png')",
+          backgroundImage: "url('/leprimo_demo/bg_blur_comp.png')",
           backgroundPosition: "center 32%",
         }}
       />
