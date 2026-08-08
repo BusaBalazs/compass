@@ -232,7 +232,7 @@ return (
       <div
         className="absolute inset-0 bg-cover bg-no-repeat"
         style={{
-          backgroundImage: "url('/leprimo_demo/bg_blur_comp.png')",
+          backgroundImage: "url('/compass/bg_blur_comp.png')",
           backgroundPosition: "center 32%",
         }}
       />

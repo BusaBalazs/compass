@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "homepage": "https://busabalazs.github.io/leprimo_demo/",
+  "homepage": "https://busabalazs.github.io/compass/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
